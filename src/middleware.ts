@@ -1,60 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const SUPPORTED = new Set(["br", "us", "pt", "uk", "fr", "it", "es"]);
-const DEFAULT_COUNTRY = "br";
+// Países suportados pelo projeto Global
+const SUPPORTED_COUNTRIES = new Set(['br', 'us', 'pt', 'uk', 'fr', 'it', 'es']);
+const DEFAULT_COUNTRY = 'br';
 
-function getCountryFromHost(hostname: string): string | null {
-  // Remove porta se existir (ex: localhost:3001)
-  const host = hostname.split(":")[0].toLowerCase();
+export function middleware(request: NextRequest) {
+  const hostname = request.headers.get('host') || "";
 
-  // APEX neutro (não reescrever x-index.com nem www.x-index.com)
-  const apex = "x-index.com";
-  if (host === apex || host === `www.${apex}`) return null;
+  // Extrai o primeiro segmento do host (subdomínio ou o próprio domínio se for apex)
+  // Ex: br.x-index.com -> "br"
+  // Ex: www.x-index.com -> "www"
+  // Ex: x-index.com -> "x-index"
+  // Ex: localhost:3000 -> "localhost"
+  const subdomain = hostname.split('.')[0].toLowerCase();
 
-  const parts = host.split(".");
-  if (parts.length < 3) return null;
+  // Lógica de detecção:
+  // Se o subdomínio for um país suportado, usa ele.
+  // Caso contrário (www, apex, localhost puro etc), usa o DEFAULT_COUNTRY.
+  const country = SUPPORTED_COUNTRIES.has(subdomain) ? subdomain : DEFAULT_COUNTRY;
 
-  const sub = parts[0];
+  // Clona os headers da requisição original para injetar o x-country
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-country', country);
 
-  if (sub === "www") return null;
-
-  return SUPPORTED.has(sub) ? sub : null;
-}
-
-export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") || "";
-  const detectedCountry = getCountryFromHost(host);
-
-  const url = req.nextUrl.clone();
-  const pathname = url.pathname;
-
-  // Ignorar rotas internas/estáticas
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname === "/favicon.ico" ||
-    pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml"
-  ) {
-    return NextResponse.next();
-  }
-
-  // Se já está prefixado (/br, /us, etc.), não reescrever
-  const alreadyPrefixed = Array.from(SUPPORTED).some(
-    (c) => pathname === `/${c}` || pathname.startsWith(`/${c}/`)
-  );
-  if (alreadyPrefixed) return NextResponse.next();
-
-  // Se for apex neutro, não reescrever
-  if (detectedCountry === null) return NextResponse.next();
-
-  // Subdomínio detectado → reescrever
-  const country = detectedCountry ?? DEFAULT_COUNTRY;
-  url.pathname = `/${country}${pathname === "/" ? "" : pathname}`;
-
-  return NextResponse.rewrite(url);
+  // Retorna o request modificado, sem rewrite de URL, apenas passando o header adiante.
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|robots.txt|sitemap.xml).*)"],
+  // Mantém a regra de ignorar next internals e estáticos
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

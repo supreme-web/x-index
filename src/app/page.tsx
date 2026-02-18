@@ -1,65 +1,60 @@
-import Image from "next/image";
+import { getCountryFromRequest } from "@/lib/country";
 
-export default function Home() {
+export default async function Home() {
+  const country = await getCountryFromRequest();
+  const isBr = country === "br";
+
+  const content = isBr
+    ? {
+      title: "x-index: Domine Seu Nicho Local",
+      subtitle:
+        "A plataforma definitiva para escalar sua presença orgânica em múltiplos bairros e cidades.",
+      cta: "Acessar Painel",
+    }
+    : {
+      title: "x-index: Dominate Your Local Niche",
+      subtitle:
+        "The ultimate platform to scale your organic presence across multiple neighborhoods and cities.",
+      cta: "Access Dashboard",
+    };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-center text-white">
+      <div className="max-w-3xl space-y-8">
+        <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent pb-2">
+          {content.title}
+        </h1>
+
+        <p className="mx-auto max-w-2xl text-xl text-zinc-400 leading-relaxed">
+          {content.subtitle}
+        </p>
+
+        <div className="pt-8">
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="https://app.x-index.com"
+            className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-bold text-black transition-all hover:scale-105 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-900"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            {content.cta}
+            <svg
+              className="ml-2 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
           </a>
         </div>
-      </main>
-    </div>
+
+        <div className="mt-16 text-xs text-zinc-600">
+          <p>Region: {country.toUpperCase()}</p>
+        </div>
+      </div>
+    </main>
   );
 }
